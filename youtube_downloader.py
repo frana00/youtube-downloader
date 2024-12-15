@@ -8,7 +8,7 @@ import re
 # Configuración de la página
 st.set_page_config(
     page_title="Social Media Downloader",
-    page_icon="📺",
+    page_icon="📱",
     layout="centered"
 )
 
@@ -17,15 +17,27 @@ st.markdown("""
     <style>
         .stButton>button {
             width: 100%;
-            background-color: #FF0000;
             color: white;
         }
         .stButton>button:hover {
-            background-color: #CC0000;
             color: white;
         }
         .download-button {
             background-color: #28a745 !important;
+        }
+        .platform-info {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+        .youtube-info {
+            background-color: #ff00001a;
+        }
+        .tiktok-info {
+            background-color: #00f2ea1a;
+        }
+        .instagram-info {
+            background-color: #c135841a;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -42,7 +54,17 @@ def detect_platform(url):
         return 'youtube'
     elif 'tiktok.com' in url:
         return 'tiktok'
+    elif 'instagram.com' in url:
+        return 'instagram'
     return None
+
+def get_platform_icon(platform):
+    icons = {
+        'youtube': '📺',
+        'tiktok': '📱',
+        'instagram': '📸'
+    }
+    return icons.get(platform, '🔗')
 
 def get_video_info(url):
     try:
@@ -136,22 +158,35 @@ def download_video(url, download_audio_only=False):
         return False
 
 def main():
-    st.title("📺 Social Media Downloader")
-    st.markdown("### Descarga videos de YouTube y TikTok")
+    st.title("📱 Social Media Downloader")
+    st.markdown("### Descarga contenido de tus redes sociales favoritas")
 
-    url = st.text_input("Ingresa el enlace del video:", placeholder="https://youtube.com/... o https://tiktok.com/...")
+    # Mostrar plataformas soportadas
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("#### 📺 YouTube")
+    with col2:
+        st.markdown("#### 📱 TikTok")
+    with col3:
+        st.markdown("#### 📸 Instagram")
+
+    url = st.text_input("Ingresa el enlace:", placeholder="https://...")
 
     if url:
         platform = detect_platform(url)
         if platform:
             info = get_video_info(url)
             if info:
-                st.markdown("### Información del video")
-                st.write(f"**Título:** {info['title']}")
-                if platform == 'youtube':
-                    st.write(f"**Duración:** {info['duration']}")
+                st.markdown(f"### {get_platform_icon(platform)} Información del contenido")
+                with st.container():
+                    st.markdown(f"""
+                    <div class="platform-info {platform}-info">
+                        <strong>Título:</strong> {info['title']}
+                        {'<br><strong>Duración:</strong> ' + info['duration'] if platform == 'youtube' else ''}
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                # Solo mostrar opción de audio para YouTube
+                # Opciones específicas por plataforma
                 if platform == 'youtube':
                     download_option = st.radio(
                         "Selecciona el formato:",
@@ -160,30 +195,41 @@ def main():
                 else:
                     download_option = "Video completo"
 
-                if st.button("⬇️ Descargar"):
+                if st.button(f"⬇️ Descargar de {platform.title()}"):
                     download_video(url, download_option == "Solo audio (MP3)")
         else:
-            st.error("Por favor, ingresa un enlace válido de YouTube o TikTok")
+            st.error("Por favor, ingresa un enlace válido de YouTube, TikTok o Instagram")
 
     # Información adicional
     with st.expander("ℹ️ Información y ayuda"):
         st.markdown("""
+        ### Plataformas soportadas:
+
+        #### 📺 YouTube
+        - Videos completos
+        - Solo audio (MP3)
+        - Shorts
+
+        #### 📱 TikTok
+        - Videos
+        - Clips
+
+        #### 📸 Instagram
+        - Reels
+        - Posts con video
+        - Stories (públicas)
+
         ### Instrucciones:
-        1. Pega el enlace del video (YouTube o TikTok)
-        2. Para videos de YouTube:
-           - Puedes elegir entre video completo o solo audio
-        3. Para videos de TikTok:
-           - Se descargará el video completo
+        1. Pega el enlace del contenido que quieres descargar
+        2. La aplicación detectará automáticamente la plataforma
+        3. Selecciona las opciones disponibles (si aplica)
         4. Haz clic en "Descargar"
-        5. Cuando el archivo esté listo, aparecerá un botón "Guardar archivo"
+        5. Espera a que se procese y descarga tu archivo
 
         ### Notas:
-        - El tiempo de procesamiento dependerá de tu conexión a internet
+        - El tiempo de procesamiento depende de tu conexión a internet
         - Para videos largos, la preparación puede tardar varios minutos
-
-        ### Plataformas soportadas:
-        - YouTube: Videos completos y audio MP3
-        - TikTok: Videos completos
+        - Asegúrate de que el contenido sea público
         """)
 
 if __name__ == "__main__":
