@@ -12,6 +12,34 @@ st.set_page_config(
     layout="centered"
 )
 
+# Código de Google Analytics usando secrets
+GA_ID = st.secrets["google_analytics"]["TRACKING_ID"]
+GA_JS = f"""
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){{dataLayer.push(arguments);}}
+    gtag('js', new Date());
+    gtag('config', '{GA_ID}');
+</script>
+"""
+
+# Insertar el código de GA
+st.components.v1.html(GA_JS)
+
+# Función para rastrear eventos
+def track_event(action, category, label):
+    js = f"""
+    <script>
+    gtag('event', '{action}', {{
+        'event_category': '{category}',
+        'event_label': '{label}'
+    }});
+    </script>
+    """
+    st.components.v1.html(js)
+
 # Estilos CSS personalizados
 st.markdown("""
     <style>
@@ -85,7 +113,6 @@ def download_video(url, download_audio_only=False):
                 ]
                 extension = 'mp4'
 
-            # Mostrar barra de progreso
             progress_bar = st.progress(0)
             status_text = st.empty()
 
@@ -119,6 +146,13 @@ def download_video(url, download_audio_only=False):
                 status_text.text("¡Archivo listo para descargar! 🎉")
                 st.balloons()
 
+                # Rastrear el evento de descarga exitosa
+                track_event(
+                    action='download_success',
+                    category='video' if not download_audio_only else 'audio',
+                    label=url
+                )
+
                 st.download_button(
                     label="📥 Guardar archivo",
                     data=archivo_bytes,
@@ -128,6 +162,12 @@ def download_video(url, download_audio_only=False):
                 )
                 return True
             else:
+                # Rastrear el error
+                track_event(
+                    action='download_error',
+                    category='error',
+                    label=url
+                )
                 st.error(f"Error en la descarga: {process.stderr.read()}")
                 return False
 
@@ -142,6 +182,9 @@ def main():
     url = st.text_input("Ingresa el enlace del video:", placeholder="https://youtube.com/... o https://tiktok.com/...")
 
     if url:
+        # Rastrear evento de ingreso de URL
+        track_event('url_input', 'interaction', url)
+
         platform = detect_platform(url)
         if platform:
             info = get_video_info(url)
@@ -151,7 +194,6 @@ def main():
                 if platform == 'youtube':
                     st.write(f"**Duración:** {info['duration']}")
 
-                # Solo mostrar opción de audio para YouTube
                 if platform == 'youtube':
                     download_option = st.radio(
                         "Selecciona el formato:",
@@ -165,7 +207,6 @@ def main():
         else:
             st.error("Por favor, ingresa un enlace válido de YouTube o TikTok")
 
-    # Información adicional
     with st.expander("ℹ️ Información y ayuda"):
         st.markdown("""
         ### Instrucciones:
