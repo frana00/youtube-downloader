@@ -129,7 +129,7 @@ def download_video(url, download_audio_only=False):
 
 def main():
     st.title("📺 YouTube Downloader")
-    st.markdown("### Descarga tus videos favoritos de YouTube")
+    st.markdown("### Descarga videos de YouTube")
 
     url = st.text_input("Ingresa el enlace de YouTube:", placeholder="https://youtube.com/...")
 
