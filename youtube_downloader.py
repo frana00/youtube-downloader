@@ -3,10 +3,11 @@ import subprocess
 import sys
 import tempfile
 import os
+import re
 
 # Configuración de la página
 st.set_page_config(
-    page_title="YouTube Downloader",
+    page_title="Social Media Downloader",
     page_icon="📺",
     layout="centered"
 )
@@ -35,6 +36,13 @@ def install_dependencies():
                       check=True, capture_output=True)
     except Exception as e:
         st.error(f"Error instalando dependencias: {str(e)}")
+
+def detect_platform(url):
+    if 'youtube.com' in url or 'youtu.be' in url:
+        return 'youtube'
+    elif 'tiktok.com' in url:
+        return 'tiktok'
+    return None
 
 def get_video_info(url):
     try:
@@ -128,43 +136,54 @@ def download_video(url, download_audio_only=False):
         return False
 
 def main():
-    st.title("📺 YouTube Downloader")
-    st.markdown("### Descarga videos de YouTube")
+    st.title("📺 Social Media Downloader")
+    st.markdown("### Descarga videos de YouTube y TikTok")
 
-    url = st.text_input("Ingresa el enlace de YouTube:", placeholder="https://youtube.com/...")
+    url = st.text_input("Ingresa el enlace del video:", placeholder="https://youtube.com/... o https://tiktok.com/...")
 
     if url:
-        info = get_video_info(url)
-        if info:
-            st.markdown("### Información del video")
-            st.write(f"**Título:** {info['title']}")
-            st.write(f"**Duración:** {info['duration']}")
+        platform = detect_platform(url)
+        if platform:
+            info = get_video_info(url)
+            if info:
+                st.markdown("### Información del video")
+                st.write(f"**Título:** {info['title']}")
+                if platform == 'youtube':
+                    st.write(f"**Duración:** {info['duration']}")
 
-            download_option = st.radio(
-                "Selecciona el formato:",
-                ["Video completo", "Solo audio (MP3)"]
-            )
+                # Solo mostrar opción de audio para YouTube
+                if platform == 'youtube':
+                    download_option = st.radio(
+                        "Selecciona el formato:",
+                        ["Video completo", "Solo audio (MP3)"]
+                    )
+                else:
+                    download_option = "Video completo"
 
-            if st.button("⬇️ Descargar"):
-                download_video(url, download_option == "Solo audio (MP3)")
+                if st.button("⬇️ Descargar"):
+                    download_video(url, download_option == "Solo audio (MP3)")
+        else:
+            st.error("Por favor, ingresa un enlace válido de YouTube o TikTok")
 
     # Información adicional
     with st.expander("ℹ️ Información y ayuda"):
         st.markdown("""
         ### Instrucciones:
-        1. Pega el enlace del video de YouTube
-        2. Selecciona si quieres descargar el video completo o solo el audio
-        3. Haz clic en "Descargar"
-        4. Cuando el archivo esté listo, aparecerá un botón "Guardar archivo"
-        5. Haz clic en "Guardar archivo" para descargarlo a tu dispositivo
+        1. Pega el enlace del video (YouTube o TikTok)
+        2. Para videos de YouTube:
+           - Puedes elegir entre video completo o solo audio
+        3. Para videos de TikTok:
+           - Se descargará el video completo
+        4. Haz clic en "Descargar"
+        5. Cuando el archivo esté listo, aparecerá un botón "Guardar archivo"
 
         ### Notas:
         - El tiempo de procesamiento dependerá de tu conexión a internet
         - Para videos largos, la preparación puede tardar varios minutos
 
-        ### Formatos disponibles:
-        - **Video completo**: Incluye video y audio en la mejor calidad disponible
-        - **Solo audio**: Formato MP3
+        ### Plataformas soportadas:
+        - YouTube: Videos completos y audio MP3
+        - TikTok: Videos completos
         """)
 
 if __name__ == "__main__":
