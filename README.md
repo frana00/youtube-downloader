@@ -1,23 +1,39 @@
-# Social Media Video Downloader
+# Social Media Downloader / Descarga videos de Yotube y TikTok
 
-Una aplicación web simple para descargar videos de YouTube y TikTok.
+## Description / Descripción
+A simple web application that allows you to download videos from YouTube and TikTok.
+Una aplicación web simple que permite descargar videos de YouTube y TikTok.
 
-URL: https://youtube-downloader-00.streamlit.app/
+## Features / Características
+- Download YouTube videos in MP4 format / Descarga videos de YouTube en formato MP4
+- Download YouTube audio in MP3 format / Descarga audio de YouTube en formato MP3
+- Download TikTok videos / Descarga videos de TikTok
+- Simple and user-friendly interface / Interfaz simple y fácil de usar
 
-## Características
-- Descarga videos en la mejor calidad disponible
-- Para Youtube, opción para descargar solo el audio en formato MP3
-- Interfaz amigable y fácil de usar
-- Muestra información del video antes de descargar
+## How to Use / Cómo Usar
+1. Enter the URL of the video you want to download / Ingresa la URL del video que deseas descargar
+2. Select the download format (Video MP4 or Audio MP3 for YouTube) / Selecciona el formato de descarga (Video MP4 o Audio MP3 para YouTube)
+3. Click the download button / Haz clic en el botón de descarga
 
-## Uso
-1. Ingresa el enlace del video de YouTube o TikTok
-2. Selecciona el formato deseado (video o audio)
-3. Haz clic en "Descargar"
-4. Espera a que el archivo esté listo
-5. Usa el botón "Guardar archivo" para descargarlo
+## Installation / Instalación
+```bash
+# Clone the repository / Clonar el repositorio
+git clone https://github.com/yourusername/social-media-downloader.git
 
-## Tecnologías utilizadas
-- Python
-- Streamlit
+# Navigate to the project directory / Navegar al directorio del proyecto
+cd social-media-downloader
+
+# Install dependencies / Instalar dependencias
+pip install -r requirements.txt
+
+# Run the application / Ejecutar la aplicación
+streamlit run youtube_downloader.py
+
+# Requirements / Requisitos
+
+- Python 3.7+
+- streamlit
 - yt-dlp
+
+# Live Demo / Demo en Vivo
+[Social Media Downloader](https://youtube-downloader-00.streamlit.app/)
