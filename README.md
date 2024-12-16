@@ -21,9 +21,8 @@ Una aplicación web simple que permite descargar videos de YouTube y TikTok.
 - streamlit
 - yt-dlp
 
-## Live Demo / Demo en Vivo
-Visit the application at: / Visita la aplicación en:
-[https://your-app-url.streamlit.app](https://your-app-url.streamlit.app){:target="_blank"}
+# Live Demo / Demo en Vivo
+[Social Media Downloader](https://youtube-downloader-00.streamlit.app/)
 
 ## Installation / Instalación
 ```bash
