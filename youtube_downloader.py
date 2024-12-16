@@ -4,6 +4,7 @@ import sys
 import tempfile
 import os
 import re
+import streamlit.components.v1 as components
 
 # Configuración de la página
 st.set_page_config(
@@ -12,33 +13,35 @@ st.set_page_config(
     layout="centered"
 )
 
-# Código de Google Analytics usando secrets
+# Inyectar Google Analytics
 GA_ID = st.secrets["google_analytics"]["TRACKING_ID"]
-GA_JS = f"""
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){{dataLayer.push(arguments);}}
-    gtag('js', new Date());
-    gtag('config', '{GA_ID}');
-</script>
-"""
-
-# Insertar el código de GA
-st.components.v1.html(GA_JS)
+components.html(
+    f"""
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){{dataLayer.push(arguments);}}
+        gtag('js', new Date());
+        gtag('config', '{GA_ID}');
+    </script>
+    """,
+    height=0,
+)
 
 # Función para rastrear eventos
 def track_event(action, category, label):
-    js = f"""
-    <script>
-    gtag('event', '{action}', {{
-        'event_category': '{category}',
-        'event_label': '{label}'
-    }});
-    </script>
-    """
-    st.components.v1.html(js)
+    components.html(
+        f"""
+        <script>
+        gtag('event', '{action}', {{
+            'event_category': '{category}',
+            'event_label': '{label}'
+        }});
+        </script>
+        """,
+        height=0
+    )
 
 # Estilos CSS personalizados
 st.markdown("""
