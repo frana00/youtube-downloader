@@ -13,21 +13,20 @@ st.set_page_config(
     layout="centered"
 )
 
-# Inyectar Google Analytics
-GA_ID = st.secrets["google_analytics"]["TRACKING_ID"]
-components.html(
-    f"""
-    <!-- Google tag (gtag.js) -->
+# Obtener el ID de GA de forma segura
+GA_ID = st.secrets.get("GA_ID", "")
+
+if GA_ID:  # Solo insertar GA si existe el ID
+    ga_code = f"""
     <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
     <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){{dataLayer.push(arguments);}}
-        gtag('js', new Date());
-        gtag('config', '{GA_ID}');
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+      gtag('config', '{GA_ID}');
     </script>
-    """,
-    height=0,
-)
+    """
+    components.html(ga_code, height=0)
 
 # Función para rastrear eventos
 def track_event(action, category, label):
