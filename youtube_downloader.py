@@ -1,234 +1,84 @@
 import streamlit as st
-import subprocess
-import sys
-import tempfile
-import os
+import yt_dlp
 import re
-import streamlit.components.v1 as components
 
-# Configuración de la página
+# Page configuration / Configuración de la página
 st.set_page_config(
-    page_title="Social Media Downloader",
+    page_title="Social Media Downloader / Descargador de Redes Sociales",
     page_icon="📺",
     layout="centered"
 )
 
-# Obtener el ID de GA de forma segura
-GA_ID = st.secrets.get("GA_ID", "")
-
-if GA_ID:  # Solo insertar GA si existe el ID
-    ga_code = f"""
-    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-      gtag('config', '{GA_ID}');
-    </script>
-    """
-    components.html(ga_code, height=0)
-
-# Función para rastrear eventos
-def track_event(action, category, label):
-    components.html(
-        f"""
-        <script>
-        gtag('event', '{action}', {{
-            'event_category': '{category}',
-            'event_label': '{label}'
-        }});
-        </script>
-        """,
-        height=0
-    )
-
-# Estilos CSS personalizados
+# Title and description / Título y descripción
+st.title("Social Media Downloader 📺")
 st.markdown("""
-    <style>
-        .stButton>button {
-            width: 100%;
-            background-color: #FF0000;
-            color: white;
-        }
-        .stButton>button:hover {
-            background-color: #CC0000;
-            color: white;
-        }
-        .download-button {
-            background-color: #28a745 !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
+#### Download videos from YouTube and TikTok / Descarga videos de YouTube y TikTok
+""")
 
-def install_dependencies():
-    try:
-        subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"], 
-                      check=True, capture_output=True)
-    except Exception as e:
-        st.error(f"Error instalando dependencias: {str(e)}")
+# URL input / Entrada de URL
+url = st.text_input("Enter the URL / Ingresa la URL:", placeholder="https://www.youtube.com/watch?v=...")
 
-def detect_platform(url):
-    if 'youtube.com' in url or 'youtu.be' in url:
-        return 'youtube'
-    elif 'tiktok.com' in url:
-        return 'tiktok'
-    return None
+# Download options / Opciones de descarga
+if url:
+    if "youtube.com" in url or "youtu.be" in url:
+        download_type = st.radio(
+            "Select download type / Selecciona el tipo de descarga:",
+            ["Video MP4", "Audio MP3"]
+        )
+    elif "tiktok.com" in url:
+        download_type = "Video MP4"
+    else:
+        st.error("URL not supported. Please enter a YouTube or TikTok URL / URL no soportada. Por favor ingresa una URL de YouTube o TikTok")
+        st.stop()
 
-def get_video_info(url):
-    try:
-        comando = [
-            'yt-dlp',
-            '--get-title',
-            '--get-duration',
-            url
-        ]
-        resultado = subprocess.run(comando, capture_output=True, text=True)
-        info = resultado.stdout.strip().split('\n')
-        return {
-            'title': info[0] if len(info) > 0 else 'No disponible',
-            'duration': info[1] if len(info) > 1 else 'No disponible'
-        }
-    except:
-        return None
-
-def download_video(url, download_audio_only=False):
-    try:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            output_template = os.path.join(temp_dir, '%(title)s.%(ext)s')
-
-            if download_audio_only:
-                comando = [
-                    'yt-dlp',
-                    '-x',
-                    '--audio-format', 'mp3',
-                    '-o', output_template,
-                    '--no-warnings',
-                    url
-                ]
-                extension = 'mp3'
-            else:
-                comando = [
-                    'yt-dlp',
-                    '-o', output_template,
-                    '--no-warnings',
-                    url
-                ]
-                extension = 'mp4'
-
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-
-            process = subprocess.Popen(
-                comando,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                universal_newlines=True
-            )
-
-            while True:
-                output = process.stdout.readline()
-                if output == '' and process.poll() is not None:
-                    break
-                if output:
-                    if '[download]' in output and '%' in output:
-                        try:
-                            percent = float(output.split('%')[0].split()[-1])
-                            progress_bar.progress(percent / 100)
-                            status_text.text(f"Descargando: {percent:.1f}%")
-                        except:
-                            continue
-
-            if process.returncode == 0:
-                archivo = [f for f in os.listdir(temp_dir)][0]
-                archivo_path = os.path.join(temp_dir, archivo)
-
-                with open(archivo_path, 'rb') as file:
-                    archivo_bytes = file.read()
-
-                status_text.text("¡Archivo listo para descargar! 🎉")
-                st.balloons()
-
-                # Rastrear el evento de descarga exitosa
-                track_event(
-                    action='download_success',
-                    category='video' if not download_audio_only else 'audio',
-                    label=url
-                )
-
-                st.download_button(
-                    label="📥 Guardar archivo",
-                    data=archivo_bytes,
-                    file_name=archivo,
-                    mime=f"{'audio' if download_audio_only else 'video'}/{extension}",
-                    key='download_button'
-                )
-                return True
-            else:
-                # Rastrear el error
-                track_event(
-                    action='download_error',
-                    category='error',
-                    label=url
-                )
-                st.error(f"Error en la descarga: {process.stderr.read()}")
-                return False
-
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return False
-
-def main():
-    st.title("📺 Social Media Downloader")
-    st.markdown("### Descarga videos de YouTube y TikTok")
-
-    url = st.text_input("Ingresa el enlace del video:", placeholder="https://youtube.com/... o https://tiktok.com/...")
-
-    if url:
-        # Rastrear evento de ingreso de URL
-        track_event('url_input', 'interaction', url)
-
-        platform = detect_platform(url)
-        if platform:
-            info = get_video_info(url)
-            if info:
-                st.markdown("### Información del video")
-                st.write(f"**Título:** {info['title']}")
-                if platform == 'youtube':
-                    st.write(f"**Duración:** {info['duration']}")
-
-                if platform == 'youtube':
-                    download_option = st.radio(
-                        "Selecciona el formato:",
-                        ["Video completo", "Solo audio (MP3)"]
-                    )
+    # Download button / Botón de descarga
+    if st.button("Download / Descargar"):
+        try:
+            with st.spinner("Processing... / Procesando..."):
+                # YouTube download options / Opciones de descarga de YouTube
+                if "youtube.com" in url or "youtu.be" in url:
+                    if download_type == "Video MP4":
+                        ydl_opts = {
+                            'format': 'best[ext=mp4]',
+                        }
+                    else:  # Audio MP3
+                        ydl_opts = {
+                            'format': 'bestaudio/best',
+                            'postprocessors': [{
+                                'key': 'FFmpegExtractAudio',
+                                'preferredcodec': 'mp3',
+                                'preferredquality': '192',
+                            }],
+                        }
+                # TikTok download options / Opciones de descarga de TikTok
                 else:
-                    download_option = "Video completo"
+                    ydl_opts = {
+                        'format': 'best',
+                    }
 
-                if st.button("⬇️ Descargar"):
-                    download_video(url, download_option == "Solo audio (MP3)")
-        else:
-            st.error("Por favor, ingresa un enlace válido de YouTube o TikTok")
+                # Download process / Proceso de descarga
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(url, download=False)
+                    video_title = info['title']
+                    video_url = info['url']
 
-    with st.expander("ℹ️ Información y ayuda"):
-        st.markdown("""
-        ### Instrucciones:
-        1. Pega el enlace del video (YouTube o TikTok)
-        2. Para videos de YouTube:
-           - Puedes elegir entre video completo o solo audio
-        3. Para videos de TikTok:
-           - Se descargará el video completo
-        4. Haz clic en "Descargar"
-        5. Cuando el archivo esté listo, aparecerá un botón "Guardar archivo"
+                    # Clean filename / Limpiar nombre del archivo
+                    clean_title = re.sub(r'[\\/*?:"<>|]', "", video_title)
 
-        ### Notas:
-        - El tiempo de procesamiento dependerá de tu conexión a internet
-        - Para videos largos, la preparación puede tardar varios minutos
+                    # Set file extension / Establecer extensión del archivo
+                    extension = 'mp3' if download_type == "Audio MP3" else 'mp4'
+                    filename = f"{clean_title}.{extension}"
 
-        ### Plataformas soportadas:
-        - YouTube: Videos completos y audio MP3
-        - TikTok: Videos completos
-        """)
+                    # Download button / Botón de descarga
+                    st.download_button(
+                        label="Click to download / Clic para descargar",
+                        data=ydl.urlopen(video_url).read(),
+                        file_name=filename,
+                        mime=f"{'audio' if extension == 'mp3' else 'video'}/{extension}"
+                    )
 
-if __name__ == "__main__":
-    install_dependencies()
-    main()
+                    st.success(f"Ready to download! / ¡Listo para descargar!")
+
+        except Exception as e:
+            st.error(f"An error occurred / Ocurrió un error: {str(e)}")
+
