@@ -15,6 +15,15 @@ Una aplicación web simple que permite descargar videos de YouTube y TikTok.
 2. Select the download format (Video MP4 or Audio MP3 for YouTube) / Selecciona el formato de descarga (Video MP4 o Audio MP3 para YouTube)
 3. Click the download button / Haz clic en el botón de descarga
 
+# Requirements / Requisitos
+
+- Python 3.7+
+- streamlit
+- yt-dlp
+
+# Live Demo / Demo en Vivo
+[Social Media Downloader](https://youtube-downloader-00.streamlit.app/)
+
 ## Installation / Instalación
 ```bash
 # Clone the repository / Clonar el repositorio
@@ -28,12 +37,3 @@ pip install -r requirements.txt
 
 # Run the application / Ejecutar la aplicación
 streamlit run youtube_downloader.py
-
-# Requirements / Requisitos
-
-- Python 3.7+
-- streamlit
-- yt-dlp
-
-# Live Demo / Demo en Vivo
-[Social Media Downloader](https://youtube-downloader-00.streamlit.app/)
